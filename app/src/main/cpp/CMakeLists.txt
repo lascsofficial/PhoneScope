@@ -56,7 +56,6 @@ find_library(GLESv2-lib GLESv2)
 find_library(GLESv3-lib GLESv3)
 find_library(EGL-lib EGL)
 find_library(vulkan-lib vulkan)
-find_library(neural-networks-lib neuralnetworks)
 
 target_link_libraries(phonescope_engine
     phonescope_core
@@ -66,7 +65,6 @@ target_link_libraries(phonescope_engine
     ${GLESv3-lib}
     ${EGL-lib}
     ${vulkan-lib}
-    ${neural-networks-lib}
 )
 
 # ═══════════════════════════════════════════

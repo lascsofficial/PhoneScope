@@ -18,15 +18,24 @@ struct PropEnumContext {
 
 static void propEnumCallback(const prop_info* pi, void* cookie) {
     auto* ctx = static_cast<PropEnumContext*>(cookie);
+    
+    char name[PROP_NAME_MAX] = {0};
+    char value[PROP_VALUE_MAX] = {0};
+    
+    struct Buffers { char* n; char* v; } buffs = {name, value};
+
     __system_property_read_callback(pi,
         [](void* cookie, const char* name, const char* value, uint32_t /*serial*/) {
-            auto* ctx = static_cast<PropEnumContext*>(cookie);
-            std::string nameStr(name);
-            if (ctx->prefix.empty() || nameStr.find(ctx->prefix) == 0) {
-                (*ctx->props)[nameStr] = std::string(value);
-            }
+            auto* b = static_cast<Buffers*>(cookie);
+            std::strncpy(b->n, name, PROP_NAME_MAX - 1);
+            std::strncpy(b->v, value, PROP_VALUE_MAX - 1);
         },
-        ctx);
+        &buffs);
+
+    std::string nameStr(name);
+    if (ctx->prefix.empty() || nameStr.find(ctx->prefix) == 0) {
+        (*ctx->props)[nameStr] = std::string(value);
+    }
 }
 
 std::map<std::string, std::string> PropReader::getAllProps() {
