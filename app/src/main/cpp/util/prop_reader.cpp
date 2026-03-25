@@ -18,8 +18,6 @@ struct PropEnumContext {
 
 static void propEnumCallback(const prop_info* pi, void* cookie) {
     auto* ctx = static_cast<PropEnumContext*>(cookie);
-    char name[PROP_NAME_MAX] = {0};
-    char value[PROP_VALUE_MAX] = {0};
     __system_property_read_callback(pi,
         [](void* cookie, const char* name, const char* value, uint32_t /*serial*/) {
             auto* ctx = static_cast<PropEnumContext*>(cookie);
