@@ -18,6 +18,9 @@ import com.phonescope.inspector.ui.dashboard.DashboardScreen
 import com.phonescope.inspector.ui.monitor.MonitorScreen
 import com.phonescope.inspector.ui.scan.ScanScreen
 import com.phonescope.inspector.ui.settings.SettingsScreen
+import com.phonescope.inspector.ui.process.ProcessListScreen
+import com.phonescope.inspector.ui.properties.PropertiesScreen
+import com.phonescope.inspector.ui.security.SecurityScreen
 import com.phonescope.inspector.ui.theme.PhoneScopeTheme
 
 @Composable
@@ -68,18 +71,29 @@ fun PhoneScopeNavHost() {
             },
         ) {
             // ── Bottom Nav Destinations ──
-            composable<Screen.Dashboard> {
-                DashboardScreen()
-            }
-            composable<Screen.Scan> {
-                ScanScreen()
-            }
-            composable<Screen.Monitor> {
-                MonitorScreen()
-            }
-            composable<Screen.Settings> {
-                SettingsScreen()
-            }
+            composable<Screen.Dashboard> { DashboardScreen() }
+            composable<Screen.Scan> { ScanScreen() }
+            composable<Screen.Monitor> { MonitorScreen() }
+            composable<Screen.Settings> { SettingsScreen() }
+
+            // ── Implemented Sub-Screens ──
+            composable<Screen.ProcessList> { ProcessListScreen() }
+            composable<Screen.Properties> { PropertiesScreen() }
+            composable<Screen.Security> { SecurityScreen() }
+
+            // ── Pro Feature Placeholders ──
+            composable<Screen.CategoryList> { com.phonescope.inspector.ui.components.ComingSoonScreen("Categories") }
+            composable<Screen.CategoryDetail> { com.phonescope.inspector.ui.components.ComingSoonScreen("Module Details") }
+            composable<Screen.CpuGraph> { com.phonescope.inspector.ui.components.ComingSoonScreen("CPU Timeline") }
+            composable<Screen.TemperatureMap> { com.phonescope.inspector.ui.components.ComingSoonScreen("Thermal Heatmap") }
+            composable<Screen.RamGraph> { com.phonescope.inspector.ui.components.ComingSoonScreen("Memory Timeline") }
+            composable<Screen.BatteryMonitor> { com.phonescope.inspector.ui.components.ComingSoonScreen("Battery Profiler") }
+            composable<Screen.History> { com.phonescope.inspector.ui.components.ComingSoonScreen("Scan History") }
+            composable<Screen.ScanDetail> { com.phonescope.inspector.ui.components.ComingSoonScreen("Scan Report") }
+            composable<Screen.Compare> { com.phonescope.inspector.ui.components.ComingSoonScreen("Device Comparison") }
+            composable<Screen.Report> { com.phonescope.inspector.ui.components.ComingSoonScreen("PDF Export") }
+            composable<Screen.SoCVerify> { com.phonescope.inspector.ui.components.ComingSoonScreen("SoC Verification") }
+            composable<Screen.AppAnalyzer> { com.phonescope.inspector.ui.components.ComingSoonScreen("App Analyzer") }
         }
     }
 }

@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <android/log.h>
+#include <nlohmann/json.hpp>
 #include "cpu_inspector.h"
 #include "memory_inspector.h"
 #include "gpu_inspector.h"
@@ -9,6 +10,7 @@
 #include "storage_benchmark.h"
 #include "ai_inspector.h"
 #include "process_inspector.h"
+#include "prop_reader.h"
 
 #define LOG_TAG "PhoneScopeNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -81,8 +83,9 @@ Java_com_phonescope_inspector_data_jni_NativeEngine_nativeGetProcessList(
 JNIEXPORT jstring JNICALL
 Java_com_phonescope_inspector_data_jni_NativeEngine_nativeGetAllSystemProps(
     JNIEnv* env, jobject /* this */) {
-    // System properties are read via prop_reader utility
-    return toJstring(env, "{}");
+    auto props = PropReader::getAllProps();
+    nlohmann::json j(props);
+    return toJstring(env, j.dump());
 }
 
 // ── Live Monitor (called every 1 second) ──
