@@ -1,0 +1,35 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Gradle files
+.gradle/
+build/
+*/build/
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+
+# NDK
+obj/
+.cxx/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (if added later)
+google-services.json
+
+PHONESCOPE_MASTER_PLAN_V2.md
