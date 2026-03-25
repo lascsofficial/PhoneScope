@@ -3,6 +3,7 @@
 #include "proc_reader.h"
 #include "sys_reader.h"
 #include "prop_reader.h"
+#include <unistd.h>
 
 using json = nlohmann::json;
 
@@ -11,49 +12,61 @@ namespace phonescope {
 std::string CpuInspector::inspect() {
     json result;
 
-    // 1. Parse /proc/cpuinfo
+    // 1. Parse /proc/cpuinfo (Fails on Android 10+ for apps)
     auto cpuInfoOpt = ProcReader::parseCpuInfo();
+    json processors = json::array();
+
     if (cpuInfoOpt.has_value()) {
         const auto& cpuInfo = cpuInfoOpt.value();
         
-        // Global info
         json global;
         for (const auto& kv : cpuInfo.global) {
             global[kv.first] = kv.second;
         }
         result["global"] = global;
 
-        // Per-processor info combined with sysfs
-        json processors = json::array();
         for (size_t i = 0; i < cpuInfo.processors.size(); ++i) {
             json procJson;
             for (const auto& kv : cpuInfo.processors[i]) {
                 procJson[kv.first] = kv.second;
             }
-
-            // Mix in sysfs data for this core
-            int coreId = static_cast<int>(i);
-            procJson["scaling_max_freq"] = SysReader::readCpuMaxFreq(coreId).value_or(0);
-            procJson["scaling_min_freq"] = SysReader::readCpuMinFreq(coreId).value_or(0);
-            procJson["scaling_governor"] = SysReader::readCpuGovernor(coreId).value_or("unknown");
-
-            // Cache hierarchy
-            auto caches = SysReader::readCpuCaches(coreId);
-            json cachesJson = json::array();
-            for (const auto& c : caches) {
-                json cJson;
-                cJson["level"] = c.level;
-                cJson["type"] = c.type;
-                cJson["size"] = c.size;
-                cJson["ways_of_associativity"] = c.ways_of_associativity;
-                cachesJson.push_back(cJson);
-            }
-            procJson["caches"] = cachesJson;
-
             processors.push_back(procJson);
         }
-        result["processors"] = processors;
+    } else {
+        // Fallback: Use sysconf to get core count
+        int numCores = sysconf(_SC_NPROCESSORS_CONF);
+        if (numCores <= 0) numCores = 8; // Safe default for modern phones
+        
+        result["global"]["Hardware"] = PropReader::getProp("ro.hardware");
+        result["global"]["Processor"] = "AArch64 Processor";
+
+        for (int i = 0; i < numCores; ++i) {
+            json procJson;
+            procJson["processor"] = std::to_string(i);
+            processors.push_back(procJson);
+        }
     }
+
+    // Mix in sysfs data for all detected cores
+    for (size_t i = 0; i < processors.size(); ++i) {
+        int coreId = static_cast<int>(i);
+        processors[i]["scaling_max_freq"] = SysReader::readCpuMaxFreq(coreId).value_or(0);
+        processors[i]["scaling_min_freq"] = SysReader::readCpuMinFreq(coreId).value_or(0);
+        processors[i]["scaling_governor"] = SysReader::readCpuGovernor(coreId).value_or("unknown");
+
+        auto caches = SysReader::readCpuCaches(coreId);
+        json cachesJson = json::array();
+        for (const auto& c : caches) {
+            json cJson;
+            cJson["level"] = c.level;
+            cJson["type"] = c.type;
+            cJson["size"] = c.size;
+            cJson["ways_of_associativity"] = c.ways_of_associativity;
+            cachesJson.push_back(cJson);
+        }
+        processors[i]["caches"] = cachesJson;
+    }
+    result["processors"] = processors;
 
     // 2. Vulnerabilities
     auto vulns = SysReader::readCpuVulnerabilities();
@@ -63,7 +76,7 @@ std::string CpuInspector::inspect() {
     }
     result["vulnerabilities"] = vulnsJson;
 
-    // 3. SoC metadata (from properties)
+    // 3. SoC metadata
     result["soc_board"] = PropReader::getProp("ro.board.platform");
     result["soc_hardware"] = PropReader::getProp("ro.hardware");
 

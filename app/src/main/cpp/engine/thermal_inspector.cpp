@@ -12,11 +12,22 @@ std::string ThermalInspector::inspect() {
     // 1. Thermal Zones
     auto zones = SysReader::readThermalZones();
     json zonesJson = json::array();
-    for (const auto& zone : zones) {
-        json z;
-        z["type"] = zone.type;
-        z["temp"] = zone.temp; // Usually in millidegrees Celsius
-        zonesJson.push_back(z);
+    
+    if (zones.empty()) {
+        auto battTempOpt = SysReader::readLong("/sys/class/power_supply/battery/temp");
+        if (battTempOpt.has_value()) {
+            json z;
+            z["type"] = "battery_fallback";
+            z["temp"] = battTempOpt.value();
+            zonesJson.push_back(z);
+        }
+    } else {
+        for (const auto& zone : zones) {
+            json z;
+            z["type"] = zone.type;
+            z["temp"] = zone.temp; // Usually in millidegrees Celsius
+            zonesJson.push_back(z);
+        }
     }
     result["zones"] = zonesJson;
 

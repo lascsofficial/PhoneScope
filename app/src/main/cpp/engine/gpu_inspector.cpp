@@ -24,8 +24,20 @@ std::string GpuInspector::inspect() {
             result["vendor"] = "ARM";
             result["model"] = maliModel.value();
         } else {
-            result["vendor"] = "Unknown";
-            result["model"] = "Unknown";
+            // Fallback: Check Hardware properties
+            std::string hardware = SysReader::readString("/vendor/build.prop").value_or("");
+            if (hardware.empty()) hardware = SysReader::readString("/system/build.prop").value_or("");
+            
+            if (hardware.find("mali") != std::string::npos || hardware.find("exynos") != std::string::npos) {
+                result["vendor"] = "ARM";
+                result["model"] = "Mali Fallback";
+            } else if (hardware.find("qcom") != std::string::npos || hardware.find("adreno") != std::string::npos) {
+                result["vendor"] = "Qualcomm";
+                result["model"] = "Adreno Fallback";
+            } else {
+                result["vendor"] = "Unknown GPU";
+                result["model"] = "Restricted OS";
+            }
         }
     }
 
